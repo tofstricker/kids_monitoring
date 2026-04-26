@@ -1,53 +1,33 @@
-name: Build Android APK
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  - name: Install Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: 'zulu'
+      java-version: '17'
       
-      - name: Install Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.x'
-          channel: 'stable'
-          
-      - name: Get Dependencies
-        run: |
-          cd flutter_child_app
-          flutter pub get
-          cd ../flutter_parent_app
-          flutter pub get
-          
-      - name: Build Child App APK
-        run: |
-          cd flutter_child_app
-          flutter build apk --release
-          
-      - name: Build Parent App APK
-        run: |
-          cd flutter_parent_app
-          flutter build apk --release
-          
-      - name: Upload Child APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: child-app-release
-          path: flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
-          
-      - name: Upload Parent APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: parent-app-release
-          path: flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
+  - name: Install Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      flutter-version: '3.x'
+      channel: 'stable'
+      
+  - name: Build Apps
+    run: |
+      # Build Child App
+      cd flutter_child_app
+      flutter pub get
+      flutter build apk --release
+      cd ..
+      
+      # Build Parent App
+      cd flutter_parent_app
+      flutter pub get
+      flutter build apk --release
+      cd ..
+      
+  - name: Upload Artifacts
+    uses: actions/upload-artifact@v4
+    with:
+      name: apks
+      path: |
+        flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
+        flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
