@@ -12,8 +12,9 @@ Follow these steps to build your Android APK using GitHub Actions (totally free 
 1.  Go to your new repository on [github.com](https://github.com).
 2.  Click the **"Add file"** button and choose **"Create new file"**.
 3.  In the filename box, type exactly: `.github/workflows/build_apk.yml` (The folders will be created automatically).
-4.  Paste the following code into the editor:
+3.  **Paste this code** (Wait! DO NOT include any backticks ` ``` ` and make sure there is NO leading space):
 
+--- COPY EVERYTHING BELOW THIS LINE ---
 name: Build Android APK
 on:
   push:
@@ -25,7 +26,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
       
       - name: Install Java
         uses: actions/setup-java@v4
@@ -39,34 +41,28 @@ jobs:
           flutter-version: '3.x'
           channel: 'stable'
           
-      - name: Get Dependencies
+      - name: Build Apps
         run: |
+          # Build Child App
           cd flutter_child_app
           flutter pub get
-          cd ../flutter_parent_app
-          flutter pub get
-          
-      - name: Build Child App APK
-        run: |
-          cd flutter_child_app
           flutter build apk --release
+          cd ..
           
-      - name: Build Parent App APK
-        run: |
+          # Build Parent App
           cd flutter_parent_app
+          flutter pub get
           flutter build apk --release
+          cd ..
           
-      - name: Upload Child APK
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: child-app-release
-          path: flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
-          
-      - name: Upload Parent APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: parent-app-release
-          path: flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
+          name: apks
+          path: |
+            flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
+            flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
+--- END OF CODE ---
 
 ### Step 3: Commit and Run
 1.  Scroll down to the bottom of the page.
