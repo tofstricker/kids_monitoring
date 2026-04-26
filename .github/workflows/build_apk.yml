@@ -5,6 +5,10 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  # Opt-in to Node.js 24 to avoid deprecation warnings
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Install Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4 # Updated to V4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -25,29 +29,19 @@ jobs:
           
       - name: Get Dependencies
         run: |
-          cd flutter_child_app
-          flutter pub get
-          cd ../flutter_parent_app
-          flutter pub get
+          # If paths differ, adjust these directory names
+          cd flutter_child_app && flutter pub get && cd ..
+          cd flutter_parent_app && flutter pub get && cd ..
           
-      - name: Build Child App APK
+      - name: Build APKs
         run: |
-          cd flutter_child_app
-          flutter build apk --release
+          cd flutter_child_app && flutter build apk --release && cd ..
+          cd flutter_parent_app && flutter build apk --release && cd ..
           
-      - name: Build Parent App APK
-        run: |
-          cd flutter_parent_app
-          flutter build apk --release
-          
-      - name: Upload Child APK
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: child-app-release
-          path: flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
-          
-      - name: Upload Parent APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: parent-app-release
-          path: flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
+          name: app-apks
+          path: |
+            flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
+            flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
