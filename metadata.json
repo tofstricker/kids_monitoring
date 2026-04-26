@@ -1,0 +1,6 @@
+{
+  "name": "KiteControl",
+  "description": "KiteControl is a comprehensive parental control suite providing real-time location tracking, app blocking, bedtime schedules, and safety geofencing for Android devices.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["Real-time Tracking", "App Blocking", "Bedtime Mode", "Geofencing"]
+}

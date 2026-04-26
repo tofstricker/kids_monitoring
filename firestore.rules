@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitives & Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // Auth context helpers
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function getUserData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isParent() { return isSignedIn() && getUserData().role == 'PARENT'; }
+    function isInFamily(familyId) { return isSignedIn() && getUserData().familyId == familyId; }
+
+    // --- Validation Helpers ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'displayName', 'role', 'familyId', 'createdAt'])
+        && data.keys().size() == 5
+        && data.email is string && data.email.size() <= 256
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.role in ['PARENT', 'CHILD']
+        && data.familyId is string && data.familyId.size() <= 128
+        && data.createdAt == request.time;
+    }
+
+    function isValidPairingCode(data) {
+      return data.keys().hasAll(['code', 'familyId', 'createdBy', 'expiresAt', 'isUsed'])
+        && data.keys().size() == 5
+        && data.code.size() == 6
+        && data.familyId is string
+        && data.expiresAt is timestamp
+        && data.isUsed is bool;
+    }
+
+    function isValidUsageLog(data) {
+      return data.keys().hasAll(['userId', 'packageName', 'appName', 'durationMinutes', 'date'])
+        && data.keys().size() == 5
+        && data.userId == request.auth.uid
+        && data.packageName is string && data.packageName.size() <= 256
+        && data.appName is string && data.appName.size() <= 256
+        && data.durationMinutes is number
+        && data.date is string;
+    }
+
+    function isValidLimit(data) {
+      return data.keys().hasAll(['targetId', 'type', 'value', 'isEnabled'])
+        && data.keys().size() == 4
+        && data.targetId is string
+        && data.type in ['APP_BLOCK', 'TOTAL_TIME', 'BEDTIME']
+        && data.isEnabled is bool;
+    }
+
+    // --- Match Blocks ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || (isSignedIn() && getUserData().familyId == existing().familyId);
+      allow list: if isSignedIn() && resource.data.familyId == getUserData().familyId;
+      
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId)
+        && incoming().role == existing().role
+        && incoming().createdAt == existing().createdAt
+        && incoming().familyId == existing().familyId
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'fcmTokens'])
+        );
+    }
+
+    match /pairing_codes/{codeId} {
+      allow get: if isSignedIn(); // Restricted to active lookup by client
+      allow create: if isParent() && isValidPairingCode(incoming()) && incoming().createdBy == request.auth.uid;
+      allow update: if isSignedIn() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['isUsed'])
+        && existing().isUsed == false;
+    }
+
+    match /usage_logs/{logId} {
+      allow read: if isSignedIn() && isInFamily(existing().familyId); // Assuming familyId added for query efficiency
+      allow create: if isSignedIn() && isValidUsageLog(incoming());
+    }
+
+    match /limits/{limitId} {
+      // Must fetch the child user to verify family alignment
+      function getChildFamilyId(childId) {
+        return get(/databases/$(database)/documents/users/$(childId)).data.familyId;
+      }
+
+      allow read: if isSignedIn() && isInFamily(getChildFamilyId(existing().targetId));
+      allow write: if isParent() && isInFamily(getChildFamilyId(incoming().targetId)) && isValidLimit(incoming());
+    }
+  }
+}

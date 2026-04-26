@@ -1,0 +1,222 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information about Parent or Child users.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["PARENT", "CHILD"] },
+        "fcmTokens": { "type": "array", "items": { "type": "string" } },
+        "familyId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "PairingCode": {
+      "title": "Pairing Code",
+      "description": "One-time code to link a child device to a parent family.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "familyId": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "isUsed": { "type": "boolean" }
+      },
+      "required": ["code", "familyId", "expiresAt"]
+    },
+    "UsageLog": {
+      "title": "Usage Log",
+      "description": "Daily recording of app usage activity.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "packageName": { "type": "string" },
+        "appName": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["userId", "packageName", "durationMinutes", "date"]
+    },
+    "Limit": {
+      "title": "Usage Limit",
+      "description": "Specific constraints on app or screen time.",
+      "type": "object",
+      "properties": {
+        "targetId": { "type": "string" },
+        "type": { "type": "string", "enum": ["APP_BLOCK", "TOTAL_TIME", "BEDTIME"] },
+        "value": { "type": "string" },
+        "isEnabled": { "type": "boolean" }
+      },
+      "required": ["targetId", "type", "isEnabled"]
+    },
+    "Geofence": {
+      "title": "Geofence Zone",
+      "description": "Safe or restricted geographic zones.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "radius": { "type": "number" },
+        "familyId": { "type": "string" },
+        "type": { "type": "string", "enum": ["SAFE", "RESTRICTED"] },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["name", "latitude", "longitude", "radius", "familyId"]
+    },
+    "Location": {
+      "title": "Child Location",
+      "description": "Real-time or historical location coordinates.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "currentGeofences": { "type": "array", "items": { "type": "string" } },
+        "batteryLevel": { "type": "number" },
+        "isCharging": { "type": "boolean" },
+        "activity": { "type": "string", "enum": ["STILL", "WALKING", "RUNNING", "VEHICLE"] }
+      },
+      "required": ["userId", "latitude", "longitude", "timestamp"]
+    },
+    "SmartRule": {
+      "title": "Context-Aware Rule",
+      "description": "Multi-condition engine that activates policies based on location, time, and usage.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "familyId": { "type": "string" },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["LOCATION_IN", "LOCATION_OUT", "TIME_RANGE", "ACTIVITY", "BATTERY_LESS_THAN", "DAY_OF_WEEK"] },
+              "value": { "type": "string" }
+            },
+            "required": ["type", "value"]
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["BLOCK_APPS", "ALLOW_APPS", "LOCK_DEVICE", "SILENT_MODE", "FOCUS_MODE", "REDUCE_TRACKING", "INCREASE_LIMIT"] },
+              "value": { "type": "string" }
+            },
+            "required": ["type", "value"]
+          }
+        },
+        "isEnabled": { "type": "boolean" }
+      },
+      "required": ["name", "familyId", "conditions", "actions", "isEnabled"]
+    },
+    "NotificationHistory": {
+      "title": "Notification History",
+      "description": "Log of alerts sent to parents, used for smart summaries and anti-spam.",
+      "type": "object",
+      "properties": {
+        "familyId": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "type": { "type": "string", "enum": ["CRITICAL", "ALERT", "SUMMARY"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["familyId", "title", "body", "type", "timestamp"]
+    },
+    "AutoPilotSuggestion": {
+      "title": "Auto-Pilot Suggestion",
+      "description": "Smart recommendation generated by the behavioral analysis engine.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "familyId": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "action": { "type": "string" },
+        "value": { "type": "string" },
+        "autoApplied": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "familyId", "title", "action", "autoApplied"]
+    },
+    "ContentFilter": {
+      "title": "Content Filter Settings",
+      "description": "Configuration for the local VPN DNS filter.",
+      "type": "object",
+      "properties": {
+        "familyId": { "type": "string" },
+        "isAdultBlocked": { "type": "boolean" },
+        "isSafeSearchEnabled": { "type": "boolean" },
+        "whitelist": { "type": "array", "items": { "type": "string" } },
+        "blacklist": { "type": "array", "items": { "type": "string" } },
+        "customDnsServers": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["familyId", "isAdultBlocked"]
+    },
+    "BlockedAttempt": {
+      "title": "Blocked Website Attempt",
+      "description": "Log of a restricted domain access attempt.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "familyId": { "type": "string" },
+        "domain": { "type": "string" },
+        "reason": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "familyId", "domain", "reason", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "System users and their device tokens."
+    },
+    "/pairing_codes/{codeId}": {
+      "schema": "PairingCode",
+      "description": "Active pairing codes for linking devices."
+    },
+    "/usage_logs/{logId}": {
+      "schema": "UsageLog",
+      "description": "Historical app usage data."
+    },
+    "/limits/{limitId}": {
+      "schema": "Limit",
+      "description": "Policy enforcement rules and constraints."
+    },
+    "/geofences/{geofenceId}": {
+      "schema": "Geofence",
+      "description": "Zone definitions for location alerts."
+    },
+    "/locations/{locationId}": {
+      "schema": "Location",
+      "description": "Real-time location data for child devices."
+    },
+    "/smart_rules/{ruleId}": {
+      "schema": "SmartRule",
+      "description": "Context-aware automated behavior policies."
+    },
+    "/notification_history/{id}": {
+      "schema": "NotificationHistory",
+      "description": "Logged alerts and summaries sent to parents."
+    },
+    "/autopilot_suggestions/{id}": {
+      "schema": "AutoPilotSuggestion",
+      "description": "Behavioral analysis recommendations and auto-adjustments."
+    },
+    "/content_filters/{familyId}": {
+      "schema": "ContentFilter",
+      "description": "Family-wide web filtering and DNS configurations."
+    },
+    "/blocked_attempts/{id}": {
+      "schema": "BlockedAttempt",
+      "description": "Audit log of restricted content access attempts."
+    }
+  }
+}
