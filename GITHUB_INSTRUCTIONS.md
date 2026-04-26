@@ -14,7 +14,6 @@ Follow these steps to build your Android APK using GitHub Actions (totally free 
 3.  In the filename box, type exactly: `.github/workflows/build_apk.yml` (The folders will be created automatically).
 4.  Paste the following code into the editor:
 
-```yaml
 name: Build Android APK
 on:
   push:
@@ -68,7 +67,6 @@ jobs:
         with:
           name: parent-app-release
           path: flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
-```
 
 ### Step 3: Commit and Run
 1.  Scroll down to the bottom of the page.
