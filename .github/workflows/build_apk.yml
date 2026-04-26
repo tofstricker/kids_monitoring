@@ -1,0 +1,33 @@
+  - name: Install Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: 'zulu'
+      java-version: '17'
+      
+  - name: Install Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      flutter-version: '3.x'
+      channel: 'stable'
+      
+  - name: Build Apps
+    run: |
+      # Build Child App
+      cd flutter_child_app
+      flutter pub get
+      flutter build apk --release
+      cd ..
+      
+      # Build Parent App
+      cd flutter_parent_app
+      flutter pub get
+      flutter build apk --release
+      cd ..
+      
+  - name: Upload Artifacts
+    uses: actions/upload-artifact@v4
+    with:
+      name: apks
+      path: |
+        flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
+        flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
