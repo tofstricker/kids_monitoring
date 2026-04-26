@@ -1,13 +1,5 @@
 name: Build Android APK
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-env:
-  # Opt-in to Node.js 24 to avoid deprecation warnings
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+on: [push] # This builds the app every time you save/push code
 
 jobs:
   build:
@@ -15,30 +7,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Java
-        uses: actions/setup-java@v4 # Updated to V4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
           
-      - name: Install Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
           channel: 'stable'
           
-      - name: Get Dependencies
+      - name: Build Child App
         run: |
-          # If paths differ, adjust these directory names
-          cd flutter_child_app && flutter pub get && cd ..
-          cd flutter_parent_app && flutter pub get && cd ..
+          cd flutter_child_app
+          flutter pub get
+          flutter build apk --release
           
-      - name: Build APKs
+      - name: Build Parent App
         run: |
-          cd flutter_child_app && flutter build apk --release && cd ..
-          cd flutter_parent_app && flutter build apk --release && cd ..
-          
-      - name: Upload Artifacts
+          cd flutter_parent_app
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: app-apks
