@@ -11,10 +11,9 @@ Follow these steps to build your Android APK using GitHub Actions (totally free 
 ### Step 2: Create the Build Workflow on GitHub
 1.  Go to your new repository on [github.com](https://github.com).
 2.  Click the **"Add file"** button and choose **"Create new file"**.
-3.  In the filename box, type exactly: `.github/workflows/build_apk.yml` (The folders will be created automatically).
-3.  **Paste this code** (Wait! DO NOT include any backticks ` ``` ` and make sure there is NO leading space):
+3.  In the filename box, type exactly: `.github/workflows/build_apk.yml`
+4.  **COPY AND PASTE THE CODE BELOW** (Strictly follow these rules: Do NOT include any backticks ` ``` `, and ensure `name:` is the very first line):
 
---- COPY EVERYTHING BELOW THIS LINE ---
 name: Build Android APK
 on:
   push:
@@ -62,7 +61,6 @@ jobs:
           path: |
             flutter_child_app/build/app/outputs/flutter-apk/app-release.apk
             flutter_parent_app/build/app/outputs/flutter-apk/app-release.apk
---- END OF CODE ---
 
 ### Step 3: Commit and Run
 1.  Scroll down to the bottom of the page.
